@@ -33,7 +33,7 @@ pipeline {
             steps {
                 echo '=== STAGE: BUILDING DOCKER IMAGE ==='
                 sh "docker build -t ${FULL_IMAGE} ."
-                sh "docker tag ${FULL_IMAGE} ${REGISTRY_NAME}/${IMAGE_NAME}:latest"
+                sh 'docker build -t local/bookslib-app:2 -f books-service/Dockerfile books-service/'
             }
         }
 

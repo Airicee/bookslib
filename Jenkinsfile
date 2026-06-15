@@ -4,7 +4,10 @@ pipeline {
     options {
         timeout(time: 1, unit: 'HOURS') // Batasan waktu agar pipeline tidak menggantung jika error
         timestamps()                    // Menampilkan waktu di setiap baris log
+<<<<<<< HEAD
         ansiColor('xterm')              // Mengaktifkan warna pada output log terminal
+=======
+>>>>>>> 4710c19ec738ddc49c5b72f65f2a458e9aa51bad
     }
 
     environment {
@@ -32,9 +35,19 @@ pipeline {
 
         stage('3. Build Container Image') {
             steps {
-                echo '=== STAGE: BUILDING DOCKER IMAGE ==='
-                sh "docker build -t ${FULL_IMAGE} ."
-                sh "docker tag ${FULL_IMAGE} ${REGISTRY_NAME}/${IMAGE_NAME}:latest"
+                echo '=== STAGE: BUILDING DOCKER IMAGES FOR ALL SERVICES ==='
+                
+                echo 'Building Auth Service...'
+                sh 'docker build -t local/bookslib-auth:latest ./auth-service'
+                
+                echo 'Building Books Service...'
+                sh 'docker build -t local/bookslib-books:latest ./books-service'
+                
+                echo 'Building Reviews Service...'
+                sh 'docker build -t local/bookslib-reviews:latest ./reviews-service'
+                
+                echo 'Building Frontend...'
+                sh 'docker build -t local/bookslib-frontend:latest ./frontend'
             }
         }
 

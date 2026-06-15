@@ -31,9 +31,19 @@ pipeline {
 
         stage('3. Build Container Image') {
             steps {
-                echo '=== STAGE: BUILDING DOCKER IMAGE ==='
-                sh "docker build -t ${FULL_IMAGE} ."
-                sh 'docker build -t local/bookslib-app:2 -f books-service/Dockerfile books-service/'
+                echo '=== STAGE: BUILDING DOCKER IMAGES FOR ALL SERVICES ==='
+                
+                echo 'Building Auth Service...'
+                sh 'docker build -t local/bookslib-auth:latest ./auth-service'
+                
+                echo 'Building Books Service...'
+                sh 'docker build -t local/bookslib-books:latest ./books-service'
+                
+                echo 'Building Reviews Service...'
+                sh 'docker build -t local/bookslib-reviews:latest ./reviews-service'
+                
+                echo 'Building Frontend...'
+                sh 'docker build -t local/bookslib-frontend:latest ./frontend'
             }
         }
 

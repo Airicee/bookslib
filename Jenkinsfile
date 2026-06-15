@@ -57,6 +57,21 @@ pipeline {
 
         stage('5. Automated Deployment') {
             steps {
+                echo '=== MENYIAPKAN PLUGIN DOCKER COMPOSE ==='
+                sh '''
+                    # 1. Buat folder plugin Docker untuk user Jenkins
+                    mkdir -p ~/.docker/cli-plugins/
+            
+                    # 2. Download plugin Docker Compose V2 terbaru
+                    curl -SL https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+            
+                    # 3. Berikan izin eksekusi pada plugin
+                    chmod +x ~/.docker/cli-plugins/docker-compose
+            
+                    # 4. Tes apakah Docker sekarang sudah mengenali perintah 'docker compose'
+                    docker compose version
+                '''
+
                 echo '=== STAGE: DEPLOYING APPLICATION VIA DOCKER COMPOSE ==='
                 sh 'docker compose down || true'
                 sh 'docker compose up -d --build'

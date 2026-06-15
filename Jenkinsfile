@@ -58,8 +58,8 @@ pipeline {
         stage('5. Automated Deployment') {
             steps {
                 echo '=== STAGE: DEPLOYING APPLICATION VIA DOCKER COMPOSE ==='
-                sh 'docker compose down || true'
-                sh 'docker compose up -d --build'
+                sh 'docker-compose down || true'
+                sh 'docker-compose up -d --build'
             }
         }
     }

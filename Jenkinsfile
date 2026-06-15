@@ -4,7 +4,6 @@ pipeline {
     options {
         timeout(time: 1, unit: 'HOURS') // Batasan waktu agar pipeline tidak menggantung jika error
         timestamps()                    // Menampilkan waktu di setiap baris log
-        ansiColor('xterm')              // Mengaktifkan warna pada output log terminal
     }
 
     environment {

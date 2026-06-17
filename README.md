@@ -77,18 +77,22 @@ docker compose up -d --build
 ---
 
 ## 📝 Catatan Audit & Evaluasi Keamanan
-Temuan Kerentanan (Vulnerability Report)
-Dari hasil pemindaian statis menggunakan Trivy pada tahap ke-2, ditemukan 15 celah keamanan (2 Critical, 13 High) yang bersarang di dalam manifes dependensi reviews-service/requirements.txt, tepatnya pada penggunaan Django versi 4.2.7.
 
-**Status Saat Ini**
-Pipeline dikonfigurasi dengan parameter --exit-code 0 agar proses otomatisasi dan demonstrasi aplikasi tetap dapat berlanjut hingga tahap deploy untuk keperluan visualisasi tugas.
+### ⚠️ Temuan Kerentanan (Vulnerability Report)
+Dari hasil pemindaian statis menggunakan Trivy pada tahap ke-2, ditemukan **15 celah keamanan** (2 *Critical*, 13 *High*) yang bersarang di dalam manifes dependensi `reviews-service/requirements.txt`, tepatnya pada penggunaan Django versi 4.2.7.
 
-**Rekomendasi Perbaikan**
-Untuk mitigasi jangka panjang, disarankan melakukan pembaruan versi Django ke patch aman terbaru (misalnya Django 4.2.30 atau migrasi ke versi 6.0.x).
+* **Status Saat Ini:** Pipeline sengaja dikonfigurasi dengan parameter `--exit-code 0` agar proses otomatisasi dan demonstrasi deployment aplikasi tetap dapat berlanjut hingga tahap akhir untuk keperluan visualisasi tugas praktikum.
+* **Rekomendasi Perbaikan:** Untuk mitigasi jangka panjang, sangat disarankan melakukan pembaruan versi Django pada manifes ke *patch* aman terbaru (misalnya Django `4.2.30` atau langsung melakukan upgrade ke lini versi `6.0.x`).
 
-## Rencana Pengembangan ke Depan (Future Improvements)
-**Isolasi Environment** 
-Memisahkan Jenkins Controller dari Node Runner (Agent) agar eksekusi perintah Docker tidak menyentuh server utama.
+### 📌 Manajemen Isu (GitHub Issues Tracking)
+Sesuai dengan instruksi penanganan celah keamanan pada Track A, temuan kerentanan di atas telah didokumentasikan dan dilaporkan secara resmi melalui fitur **GitHub Issues** pada repositori ini dengan detail sebagai berikut:
+* **Issue Title:** `[SECURITY] Vulnerability Found in reviews-service (Django 4.2.7)`
+* **Label:** `bug` / `security`
+* **Tujuan:** Memberikan visibilitas penuh kepada tim pengembang (*developer*) agar segera melakukan *patching* dependensi tanpa mengganggu kelancaran *pipeline* utama yang sedang berjalan.
+
+### 🚀 Rencana Pengembangan ke Depan (Future Improvements)
+* **Isolasi Environment Node:** Memisahkan Jenkins Controller dari Node Runner (Agent eksternal) agar eksekusi perintah Docker runtime tidak menyentuh lingkungan server utama secara langsung.
+* **Penyaringan Kredensial (Secret Scanning):** Menambahkan modul pendeteksi rahasia seperti *Trufflehog* di tahap awal untuk mencegah adanya *hardcoded password* atau token API yang tidak sengaja terunggah ke repositori Git.
 
 **Penyaringan Kredensial**
 Menambahkan modul Secret Scanning khusus untuk mendeteksi potensi adanya hardcoded password atau token yang tidak sengaja terunggah ke repositori.

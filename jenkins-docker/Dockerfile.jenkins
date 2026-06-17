@@ -1,0 +1,17 @@
+FROM jenkins/jenkins:lts-jdk17
+USER root
+
+# Instal Docker & Docker Compose
+RUN apt-get update && apt-get install -y lsb-release
+RUN curl -fsSLo /usr/share/keyrings/docker-archive-keyring.asc https://download.docker.com/linux/debian/gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.asc] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+RUN apt-get update && apt-get install -y docker-ce-cli
+
+# Instal Trivy
+RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+# Instal Flake8 & Python
+RUN apt-get install -y python3-pip
+RUN pip3 install flake8 --break-system-packages
+
+USER jenkins

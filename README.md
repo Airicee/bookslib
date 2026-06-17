@@ -1,103 +1,82 @@
-# BooksLib - Your Simple CRUD Book Library Management
+# BooksLib - Automation Pipeline & Container Security
 
-**BooksLib** adalah aplikasi manajemen perpustakaan modern berbasis arsitektur mikroservis. Proyek ini mendemonstrasikan integrasi berbagai *stack* teknologi populer dalam satu ekosistem yang diorkestrasi menggunakan Docker.
+Repositori ini merupakan hasil *fork* dari proyek mikroservis **Bookslib** yang ditujukan untuk pemenuhan tugas implementasi CI/CD aman. Fokus utama pada pengerjaan ini adalah membangun otomatisasi *build* dan *deployment* menggunakan Jenkins, sekaligus mengamankan lingkungan eksekusi (*runner*) melalui taktik **Just-In-Time (JIT) Socket Management**.
 
-## 🏗️ Arsitektur Sistem
-
-Aplikasi ini dibagi menjadi beberapa layanan independen yang berkomunikasi melalui API:
-
-| Layanan | Teknologi | Fungsi Utama | Port |
-| --- | --- | --- | --- |
-| **Frontend** | ReactJS (Vite) | Antarmuka pengguna dengan tema monokrom. | `3000` |
-| **Auth Service** | Golang | Menangani registrasi user, login, dan manajemen identitas. | `8081` |
-| **Books Service** | .NET 8 Core | Mengelola data buku (Tambah, Lihat, Hapus, Cari). | `8082` |
-| **Reviews Service** | Python Django | Mengelola ulasan dan rating untuk setiap buku. | `8083` |
-| **Database** | PostgreSQL 15 | Penyimpanan data relasional terpusat. | `5432` |
+Seluruh infrastruktur otomasi ini dibangun secara mandiri (*self-hosted*) menggunakan kontainer Docker terisolasi.
 
 ---
 
-## 🚀 Fitur Utama
+## 🏗️ Alur Otomatisasi & Pengamanan Node
 
-* **Manajemen Akun**: Registrasi pengguna baru dan autentikasi masuk.
-* **Manajemen Katalog**: Operasi CRUD (Create, Read, Delete) untuk koleksi buku.
-* **Pencarian Pintar**: Fitur pencarian buku berdasarkan judul.
-* **Sistem Ulasan**: Pengguna dapat memberikan ulasan teks dan rating bintang pada buku.
-* **Infrastruktur Otomatis**: Migrasi database dan pembuatan tabel dilakukan otomatis saat aplikasi dijalankan.
-* **Data Persisten**: Menggunakan Docker Volume untuk memastikan data tidak hilang saat kontainer dihentikan.
+Pipeline ini dirancang untuk berjalan secara efisien dalam satu rangkaian *workflow* terpadu. Berbeda dengan pendekatan CI/CD konvensional yang membiarkan Docker Socket terbuka terus-menerus (berisiko tinggi terhadap eksploitasi *Privilege Escalation*), pipeline ini menerapkan sistem buka-tutup akses secara dinamis pada *runner*.
+
+### Tahapan Eksekusi (Stages):
+
+1. **Environment Check**
+   Melakukan inspeksi awal untuk memastikan versi Docker dan Docker Compose pada *runner* siap mengeksekusi instruksi build.
+   
+2. **Static Application Security Testing (SAST)**
+   Memanfaatkan **Trivy FS** untuk memindai berkas mentah kode sumber dan manifes dependensi secara lokal sebelum proses kompilasi kontainer dilakukan.
+   
+3. **Build Microservices Images (JIT Security)**
+   Pada tahap ini, hak akses `/var/run/docker.sock` dibuka secara temporer (`777`) tepat saat perintah `docker compose build --no-cache` akan dieksekusi, sehingga proses perakitan *image* berjalan lancar.
+   
+4. **Verify Images**
+   Melakukan verifikasi pasca-build menggunakan instruksi grep lokal untuk memastikan seluruh komponen *image* mikroservis (`bookslib`) telah tercipta sempurna di penyimpanan lokal.
+   
+5. **Deploy Application**
+   Melakukan penyegaran kontainer lama dan meluncurkan arsitektur mikroservis baru ke latar belakang (`docker compose down && docker compose up -d`).
+
+### 🔒 Post-Execution Lockdown (Mekanisme Defensif)
+Melalui blok instruksi `post`, sistem dipaksa untuk **selalu** mengunci kembali hak akses Docker Socket ke mode aman (`660`) segera setelah pipeline selesai, baik dalam kondisi build berhasil maupun gagal (*Failure Lockdown*).
 
 ---
 
-## 📁 Struktur Folder
+## 📦 Arsitektur Layanan & Folder Struktur
 
+Aplikasi terintegrasi ini berjalan di atas ekosistem multi-kontainer yang terdiri dari:
+*   **`books-service`**: Layanan utama yang dikembangkan dengan **Go (Golang)**.
+*   **`reviews-service`**: Layanan ulasan buku yang ditenagai oleh **Python (Django)**.
+*   **`frontend`**: Antarmuka web pengguna berbasis **Node.js (React)**.
+*   **Database**: Penyimpanan relasional menggunakan **PostgreSQL**.
+
+### Struktur Manajemen Environment Jenkins:
+Infrastruktur otomasi dikelola secara terpisah di dalam direktori berikut:
 ```text
-bookslib/
-├── auth-service/       # Backend service berbasis Go
-├── books-service/      # Backend service berbasis .NET 8
-├── reviews-service/    # Backend service berbasis Django
-├── frontend/           # Aplikasi Client berbasis React
-├── init.sql            # Script awal untuk skema database
-├── docker-compose.yml  # Konfigurasi Docker Compose
-└── .env                # Konfigurasi variabel lingkungan
+├── jenkins-docker/
+│   ├── docker-compose.yml   # Konfigurasi container untuk menjalankan server Jenkins
+│   └── Dockerfile.jenkins   # Custom build image Jenkins (terintegrasi CLI & perkakas pemindai)
 
-```
+🚀 Panduan Pengoperasian
+1. Menyiapkan Server Jenkins (Infrastruktur)
+Sebelum menjalankan pipeline, naikkan environment Jenkins kustom Anda terlebih dahulu melalui folder infrastruktur:
 
----
-
-## 🛠️ Cara Menjalankan Aplikasi
-
-### 1. Prasyarat
-
-Pastikan Anda sudah menginstal **Docker** dan **Docker Compose** di mesin Anda.
-
-### 2. Konfigurasi
-
-Aplikasi menggunakan variabel lingkungan untuk koneksi antar servis. Pastikan file `.env` di root dan `frontend/.env` sudah terkonfigurasi (default sudah tersedia untuk dijalankan di lokal).
-
-### 3. Menjalankan Kontainer
-
-Jalankan perintah berikut di terminal pada direktori root proyek:
-
-```bash
+Bash
+cd jenkins-docker
 docker compose up -d --build
-```
+Buka akses Jenkins pada peramban melalui port yang telah dikonfigurasi (misal http://localhost:8080), lalu selesaikan penyiapan awal dokumen kredensial.
 
-Docker akan secara otomatis melakukan:
+2. Menjalankan Pipeline Aplikasi
+Buat Pipeline Job baru di dasbor Jenkins Anda.
 
-1. Pembangunan *image* untuk setiap servis.
-2. Menjalankan *unit test* di dalam tahap *build*.
-3. Menjalankan PostgreSQL dan menunggu hingga statusnya *healthy*.
-4. Menjalankan semua servis backend dan frontend.
+Hubungkan repositori Git proyek Bookslib ini dan arahkan Script Path ke Jenkinsfile utama di root folder.
 
-### 4. Akses Aplikasi
+Jalankan Build Now. Seluruh proses pengujian kode hingga deployment aplikasi mikroservis akan berjalan otomatis di dalam runner.
 
-Buka peramban Anda dan akses:
+3. Pengujian Mandiri secara Lokal (Tanpa Jenkins)
+Jika ingin menjalankan atau menguji fungsionalitas aplikasi secara langsung di luar ekosistem Jenkins, Anda cukup mengeksekusi perintah berikut di terminal root proyek:
 
-* **Web UI**: `http://localhost:3000`
-* **Default Login**: Username: `admin`, Password: `password`
+Bash
+docker compose up -d --build
+📝 Catatan Audit & Evaluasi Keamanan
+Temuan Kerentanan (Vulnerability Report)
+Dari hasil pemindaian statis menggunakan Trivy pada tahap ke-2, ditemukan 15 celah keamanan (2 Critical, 13 High) yang bersarang di dalam manifes dependensi reviews-service/requirements.txt, tepatnya pada penggunaan Django versi 4.2.7.
 
----
+Status Saat Ini: Pipeline dikonfigurasi dengan parameter --exit-code 0 agar proses otomatisasi dan demonstrasi aplikasi tetap dapat berlanjut hingga tahap deploy untuk keperluan visualisasi tugas.
 
-## 🧪 Pengujian (Unit Testing)
+Rekomendasi Perbaikan: Untuk mitigasi jangka panjang, disarankan melakukan pembaruan versi Django ke patch aman terbaru (misalnya Django 4.2.30 atau migrasi ke versi 6.0.x).
 
-Setiap mikroservis dilengkapi dengan *unit test* sederhana untuk memastikan logika dasar berjalan dengan benar. Pengujian dijalankan otomatis saat proses `docker build`.
+Rencana Pengembangan ke Depan (Future Improvements)
+Isolasi Environment: Memisahkan Jenkins Controller dari Node Runner (Agent) agar eksekusi perintah Docker tidak menyentuh server utama.
 
-* **Go**: `go test`
-* **React**: `vitest`
-* **Django**: `python manage.py test`
-* **.NET**: Console-based validation
-
----
-
-## ⚙️ Variabel Lingkungan (.env)
-
-| Variabel | Deskripsi |
-| --- | --- |
-| `POSTGRES_USER` | Username untuk database PostgreSQL. |
-| `POSTGRES_PASSWORD` | Password untuk database PostgreSQL. |
-| `VITE_AUTH_API` | URL endpoint untuk Auth Service. |
-| `VITE_BOOKS_API` | URL endpoint untuk Books Service. |
-| `VITE_REVIEWS_API` | URL endpoint untuk Reviews Service. |
-
----
-
-**BooksLib** dibuat dengan prinsip kesederhanaan (*KISS*) dan kemudahan *deployment* sebagai referensi arsitektur mikroservis bagi pengembang.
+Penyaringan Kredensial: Menambahkan modul Secret Scanning khusus untuk mendeteksi potensi adanya hardcoded password atau token yang tidak sengaja terunggah ke repositori.

@@ -21,13 +21,8 @@ pipeline {
         stage('2. Static Application Security Testing (SAST)') {
             steps {
                 echo '=== STAGE: RUNNING SECURITY SOURCE CODE SCANNING ==='
-                echo 'Downloading and Executing Trivy via Official Installer Script...'
-                sh '''
-                    rm -rf bin trivy
-                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b . v0.49.1
-                    ./trivy fs --severity HIGH,CRITICAL --exit-code 0 .
-                    rm -f trivy
-                '''
+                echo 'Executing Permanently Installed Trivy...'
+                sh 'trivy fs --severity HIGH,CRITICAL --exit-code 0 .'
             }
         }
 

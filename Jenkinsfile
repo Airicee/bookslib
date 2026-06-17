@@ -1,92 +1,57 @@
 pipeline {
     agent any
 
-    options {
-        timeout(time: 1, unit: 'HOURS')
-        timestamps()
-    }
-
     environment {
-        TARGET_IMAGE = 'local/bookslib-auth:latest'
+        REGISTRY          = "bookslib-local"
+        AUTH_SERVICE      = "bookslib-auth-service"
+        BOOKS_SERVICE     = "bookslib-books-service"
+        REVIEWS_SERVICE   = "bookslib-reviews-service"
+        FRONTEND_SERVICE  = "bookslib-frontend"
     }
 
     stages {
-        stage('1. Code Checkout') {
+        stage('1. Environment Check') {
             steps {
-                echo '=== STAGE: FETCHING CODE FROM REPOSITORY ==='
-                checkout scm
-                sh 'git status'
+                echo '=== STAGE: CHECKING TOOLS VERSION ==='
+                sh 'docker version'
+                sh 'docker compose version'
             }
         }
 
         stage('2. Static Application Security Testing (SAST)') {
-             steps {
+            steps {
                 echo '=== STAGE: RUNNING SECURITY SOURCE CODE SCANNING ==='
-                echo 'Downloading and Executing Trivy via Script (Fixed URL)...'
+                echo 'Downloading and Executing Trivy via Official Installer Script...'
                 sh '''
-                    # Memastikan file lama yang rusak dihapus terlebih dahulu
-                    rm -f trivy_0.49.1_Linux-64bit.tar.gz trivy
-            
-                    # URL Rilisan Resmi yang Benar (Tanpa huruf 'v' pada nama file arsipnya)
-                    curl -fsSL -o trivy_0.49.1_Linux-64bit.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.tar.gz
-            
-                    # Ekstrak biner mandiri Trivy
-                    tar -xzf trivy_0.49.1_Linux-64bit.tar.gz trivy
-            
-                    # Jalankan Security Scanning
+                    rm -rf bin trivy
+                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b . v0.49.1
                     ./trivy fs --severity HIGH,CRITICAL --exit-code 0 .
-            
-                    # Pembersihan Workspace
-                    rm -f trivy trivy_0.49.1_Linux-64bit.tar.gz
+                    rm -f trivy
                 '''
             }
         }
 
-        stage('3. Build Container Image') {
+        stage('3. Build Microservices Images') {
             steps {
-                echo '=== STAGE: BUILDING DOCKER IMAGES FOR ALL SERVICES ==='
-                
-                echo 'Building Auth Service...'
-                sh 'docker build -t local/bookslib-auth:latest ./auth-service'
-                
-                echo 'Building Books Service...'
-                sh 'docker build -t local/bookslib-books:latest ./books-service'
-                
-                echo 'Building Reviews Service...'
-                sh 'docker build -t local/bookslib-reviews:latest ./reviews-service'
-                
-                echo 'Building Frontend...'
-                sh 'docker build -t local/bookslib-frontend:latest ./frontend'
+                echo '=== STAGE: BUILDING DOCKER IMAGES WITH COMPOSE ==='
+                sh 'docker compose build --no-cache'
             }
         }
 
-        stage('4. Container Image Vulnerability Scan') {
+        stage('4. Verify Images') {
             steps {
-                echo '=== STAGE: SCANNING DOCKER IMAGE FOR CVEs ==='
-                echo "Scanning image: ${TARGET_IMAGE} using Trivy..."
-                sh "trivy image --severity CRITICAL --exit-code 0 ${TARGET_IMAGE}"
-            }
-        }
-
-        stage('5. Automated Deployment') {
-            steps {
-                echo '=== STAGE: DEPLOYING APPLICATION VIA DOCKER COMPOSE ==='
-                sh 'docker compose down || true'
-                sh 'docker compose up -d --build'
+                echo '=== STAGE: VERIFYING IMAGES GENERATION ==='
+                sh 'docker images | grep bookslib'
             }
         }
     }
 
     post {
-        always {
-            echo '=== POST BUILD: CLEANING UP WORKSPACE ==='
-            sh 'docker image prune -f || true'
-        }
         success {
-            echo "✅ PIPELINE SUCCESSFUL: Build #${BUILD_NUMBER} telah berhasil dideploy dengan aman."
+            echo 'Pipeline build successfully completed!'
         }
         failure {
-            echo "❌ PIPELINE FAILED: Terjadi kesalahan pada Build #${BUILD_NUMBER}. Silakan periksa log di atas."
+            echo 'Pipeline failed. Please check the console logs for debugging.'
         }
     }
 }

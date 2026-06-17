@@ -81,7 +81,7 @@ docker compose up -d --build
 ### ⚠️ Temuan Kerentanan (Vulnerability Report)
 Dari hasil pemindaian statis menggunakan Trivy pada tahap ke-2, ditemukan **15 celah keamanan** (2 *Critical*, 13 *High*) yang bersarang di dalam manifes dependensi `reviews-service/requirements.txt`, tepatnya pada penggunaan Django versi 4.2.7.
 
-* **Status Saat Ini:** Pipeline sengaja dikonfigurasi dengan parameter `--exit-code 0` agar proses otomatisasi dan demonstrasi deployment aplikasi tetap dapat berlanjut hingga tahap akhir untuk keperluan visualisasi tugas praktikum.
+* **Status Saat Ini:** Pipeline sengaja dikonfigurasi dengan parameter `--exit-code 0` agar proses otomatisasi dan demonstrasi deployment aplikasi tetap dapat berlanjut hingga tahap akhir untuk keperluan visualisasi test.
 * **Rekomendasi Perbaikan:** Untuk mitigasi jangka panjang, sangat disarankan melakukan pembaruan versi Django pada manifes ke *patch* aman terbaru (misalnya Django `4.2.30` atau langsung melakukan upgrade ke lini versi `6.0.x`).
 
 ### 📌 Manajemen Isu (GitHub Issues Tracking)

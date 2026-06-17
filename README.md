@@ -1,6 +1,6 @@
 # BooksLib - Automation Pipeline & Container Security
 
-Repositori ini merupakan hasil *fork* dari proyek mikroservis **Bookslib** yang ditujukan untuk pemenuhan tugas implementasi CI/CD aman. Fokus utama pada pengerjaan ini adalah membangun otomatisasi *build* dan *deployment* menggunakan Jenkins, sekaligus mengamankan lingkungan eksekusi (*runner*) melalui taktik **Just-In-Time (JIT) Socket Management**.
+Repositori ini merupakan hasil *fork* dari proyek mikroservis [Bookslib](https://github.com/sncyber-ops/bookslib.git) yang ditujukan untuk pemenuhan tugas implementasi CI/CD (Track A). Fokus utama pada pengerjaan ini adalah membangun otomatisasi *build* dan *deployment* menggunakan Jenkins, sekaligus mengamankan lingkungan eksekusi (*runner*) melalui taktik **Just-In-Time (JIT) Socket Management**.
 
 Seluruh infrastruktur otomasi ini dibangun secara mandiri (*self-hosted*) menggunakan kontainer Docker terisolasi.
 
@@ -48,36 +48,47 @@ Infrastruktur otomasi dikelola secara terpisah di dalam direktori berikut:
 │   └── Dockerfile.jenkins   # Custom build image Jenkins (terintegrasi CLI & perkakas pemindai)
 ```
 
-🚀 Panduan Pengoperasian
-1. Menyiapkan Server Jenkins (Infrastruktur)
+---
+
+## 🚀 Panduan Pengoperasian
+**1. Menyiapkan Server Jenkins (Infrastruktur)**
 Sebelum menjalankan pipeline, naikkan environment Jenkins kustom Anda terlebih dahulu melalui folder infrastruktur:
 
-Bash
+```Bash
 cd jenkins-docker
 docker compose up -d --build
+```
 Buka akses Jenkins pada peramban melalui port yang telah dikonfigurasi (misal http://localhost:8080), lalu selesaikan penyiapan awal dokumen kredensial.
 
-2. Menjalankan Pipeline Aplikasi
+**2. Menjalankan Pipeline Aplikasi**
 Buat Pipeline Job baru di dasbor Jenkins Anda.
 
 Hubungkan repositori Git proyek Bookslib ini dan arahkan Script Path ke Jenkinsfile utama di root folder.
 
 Jalankan Build Now. Seluruh proses pengujian kode hingga deployment aplikasi mikroservis akan berjalan otomatis di dalam runner.
 
-3. Pengujian Mandiri secara Lokal (Tanpa Jenkins)
+**3. Pengujian Mandiri secara Lokal (Tanpa Jenkins)**
 Jika ingin menjalankan atau menguji fungsionalitas aplikasi secara langsung di luar ekosistem Jenkins, Anda cukup mengeksekusi perintah berikut di terminal root proyek:
 
-Bash
+```Bash
 docker compose up -d --build
-📝 Catatan Audit & Evaluasi Keamanan
+```
+
+---
+
+## 📝 Catatan Audit & Evaluasi Keamanan
 Temuan Kerentanan (Vulnerability Report)
 Dari hasil pemindaian statis menggunakan Trivy pada tahap ke-2, ditemukan 15 celah keamanan (2 Critical, 13 High) yang bersarang di dalam manifes dependensi reviews-service/requirements.txt, tepatnya pada penggunaan Django versi 4.2.7.
 
-Status Saat Ini: Pipeline dikonfigurasi dengan parameter --exit-code 0 agar proses otomatisasi dan demonstrasi aplikasi tetap dapat berlanjut hingga tahap deploy untuk keperluan visualisasi tugas.
+**Status Saat Ini**
+Pipeline dikonfigurasi dengan parameter --exit-code 0 agar proses otomatisasi dan demonstrasi aplikasi tetap dapat berlanjut hingga tahap deploy untuk keperluan visualisasi tugas.
 
-Rekomendasi Perbaikan: Untuk mitigasi jangka panjang, disarankan melakukan pembaruan versi Django ke patch aman terbaru (misalnya Django 4.2.30 atau migrasi ke versi 6.0.x).
+**Rekomendasi Perbaikan**
+Untuk mitigasi jangka panjang, disarankan melakukan pembaruan versi Django ke patch aman terbaru (misalnya Django 4.2.30 atau migrasi ke versi 6.0.x).
 
-Rencana Pengembangan ke Depan (Future Improvements)
-Isolasi Environment: Memisahkan Jenkins Controller dari Node Runner (Agent) agar eksekusi perintah Docker tidak menyentuh server utama.
+## Rencana Pengembangan ke Depan (Future Improvements)
+**Isolasi Environment** 
+Memisahkan Jenkins Controller dari Node Runner (Agent) agar eksekusi perintah Docker tidak menyentuh server utama.
 
-Penyaringan Kredensial: Menambahkan modul Secret Scanning khusus untuk mendeteksi potensi adanya hardcoded password atau token yang tidak sengaja terunggah ke repositori.
+**Penyaringan Kredensial**
+Menambahkan modul Secret Scanning khusus untuk mendeteksi potensi adanya hardcoded password atau token yang tidak sengaja terunggah ke repositori.

@@ -2,21 +2,19 @@ pipeline {
     agent any
 
     options {
-        timeout(time: 1, unit: 'HOURS') // Batasan waktu agar pipeline tidak menggantung jika error
-        timestamps()                    // Menampilkan waktu di setiap baris log
+        timeout(time: 1, unit: 'HOURS')
+        timestamps()
     }
 
     environment {
-        REGISTRY_NAME = 'local'
-        IMAGE_NAME    = 'bookslib-app'
-        IMAGE_TAG     = "${BUILD_NUMBER}" // Menggunakan nomor build sebagai versi image
-        FULL_IMAGE    = "${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+        TARGET_IMAGE = 'local/bookslib-auth:latest'
     }
 
     stages {
         stage('1. Code Checkout') {
             steps {
                 echo '=== STAGE: FETCHING CODE FROM REPOSITORY ==='
+                checkout scm
                 sh 'git status'
             }
         }
@@ -24,8 +22,8 @@ pipeline {
         stage('2. Static Application Security Testing (SAST)') {
             steps {
                 echo '=== STAGE: RUNNING SECURITY SOURCE CODE SCANNING ==='
-                echo 'Executing Semgrep static analysis...'
-                echo 'SAST Scan completed. No critical hardcoded credentials found.'
+                echo 'Executing Trivy FS for Static Analysis...'
+                sh 'trivy fs --severity HIGH,CRITICAL --exit-code 0 .'
             }
         }
 
@@ -50,8 +48,8 @@ pipeline {
         stage('4. Container Image Vulnerability Scan') {
             steps {
                 echo '=== STAGE: SCANNING DOCKER IMAGE FOR CVEs ==='
-                echo "Scanning image: ${FULL_IMAGE} using Trivy..."
-                echo 'Image scan completed. Vulnerabilities are within acceptable thresholds.'
+                echo "Scanning image: ${TARGET_IMAGE} using Trivy..."
+                sh "trivy image --severity CRITICAL --exit-code 0 ${TARGET_IMAGE}"
             }
         }
 

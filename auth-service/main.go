@@ -46,13 +46,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	enableCORS(&w)
-	if r.Method == http.MethodOptions {
+	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	var u User
-	json.NewDecoder(r.Body).Decode(&u)
+	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -61,7 +61,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	query := fmt.Sprintf("SELECT id FROM users WHERE username = '%s' AND password = '%s'", u.Username, u.Password)
 
 	var id int
-	err := db.QueryRow(query).Scan(&id)
+	err = db.QueryRow(query).Scan(&id)
 
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)

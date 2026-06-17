@@ -20,10 +20,10 @@ pipeline {
         }
 
         stage('2. Static Application Security Testing (SAST)') {
-            steps {
+             steps {
                 echo '=== STAGE: RUNNING SECURITY SOURCE CODE SCANNING ==='
                 echo 'Executing Trivy FS for Static Analysis...'
-                sh 'trivy fs --severity HIGH,CRITICAL --exit-code 0 .'
+                sh 'docker run --rm -v ${WORKSPACE}:/apps aquasec/trivy:latest fs --severity HIGH,CRITICAL --exit-code 0 /apps'
             }
         }
 

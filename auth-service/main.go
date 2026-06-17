@@ -52,16 +52,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var u User
-	err := json.NewDecoder(r.Body).Decode(&u)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	json.NewDecoder(r.Body).Decode(&u)
 
 	query := fmt.Sprintf("SELECT id FROM users WHERE username = '%s' AND password = '%s'", u.Username, u.Password)
 
 	var id int
-	err = db.QueryRow(query).Scan(&id)
+	err := db.QueryRow(query).Scan(&id)
 
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)

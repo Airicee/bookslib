@@ -24,7 +24,7 @@ pipeline {
                 echo '=== STAGE: RUNNING SECURITY SOURCE CODE SCANNING ==='
                 echo 'Downloading and Executing Trivy via Script...'
                 sh '''
-                    wget https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.tar.gz
+                    curl -Lo trivy_0.49.1_Linux-64bit.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.tar.gz
                     tar -xzf trivy_0.49.1_Linux-64bit.tar.gz trivy
                     ./trivy fs --severity HIGH,CRITICAL --exit-code 0 .
                     rm trivy trivy_0.49.1_Linux-64bit.tar.gz

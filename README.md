@@ -46,6 +46,7 @@ Infrastruktur otomasi dikelola secara terpisah di dalam direktori berikut:
 ├── jenkins-docker/
 │   ├── docker-compose.yml   # Konfigurasi container untuk menjalankan server Jenkins
 │   └── Dockerfile.jenkins   # Custom build image Jenkins (terintegrasi CLI & perkakas pemindai)
+```
 
 🚀 Panduan Pengoperasian
 1. Menyiapkan Server Jenkins (Infrastruktur)

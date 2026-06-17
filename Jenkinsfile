@@ -22,12 +22,22 @@ pipeline {
         stage('2. Static Application Security Testing (SAST)') {
              steps {
                 echo '=== STAGE: RUNNING SECURITY SOURCE CODE SCANNING ==='
-                echo 'Downloading and Executing Trivy via Script...'
+                echo 'Downloading and Executing Trivy via Script (Fixed URL)...'
                 sh '''
-                    curl -Lo trivy_0.49.1_Linux-64bit.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.tar.gz
+                    # Memastikan file lama yang rusak dihapus terlebih dahulu
+                    rm -f trivy_0.49.1_Linux-64bit.tar.gz trivy
+            
+                    # URL Rilisan Resmi yang Benar (Tanpa huruf 'v' pada nama file arsipnya)
+                    curl -fsSL -o trivy_0.49.1_Linux-64bit.tar.gz https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.tar.gz
+            
+                    # Ekstrak biner mandiri Trivy
                     tar -xzf trivy_0.49.1_Linux-64bit.tar.gz trivy
+            
+                    # Jalankan Security Scanning
                     ./trivy fs --severity HIGH,CRITICAL --exit-code 0 .
-                    rm trivy trivy_0.49.1_Linux-64bit.tar.gz
+            
+                    # Pembersihan Workspace
+                    rm -f trivy trivy_0.49.1_Linux-64bit.tar.gz
                 '''
             }
         }

@@ -39,6 +39,13 @@ pipeline {
                 sh 'docker images | grep bookslib'
             }
         }
+
+        stage('5. Deploy / Run Application') {
+            steps {
+                echo '=== STAGE: DEPLOYING MICROSERVICES ==='
+                sh 'docker compose down && docker compose up -d'
+            }
+        }
     }
 
     post {

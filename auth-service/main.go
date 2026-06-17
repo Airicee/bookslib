@@ -9,6 +9,7 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt" // 1. BARU: Sekarang sudah di-import di sini!
 )
 
 var db *sql.DB
@@ -34,7 +35,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	var u User
 	json.NewDecoder(r.Body).Decode(&u)
 
-	_, err := db.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", u.Username, u.Password)
+	// 2. BARU: Hash password sebelum disimpan ke database
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Simpan hashedPassword (bukan u.Password yang plain text)
+	_, err = db.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", u.Username, string(hashedPassword))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -54,12 +63,22 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var u User
 	json.NewDecoder(r.Body).Decode(&u)
 
-	query := fmt.Sprintf("SELECT id FROM users WHERE username = '%s' AND password = '%s'", u.Username, u.Password)
-
-	var id int
-	err := db.QueryRow(query).Scan(&id)
+	// 3. PERBAIKAN: Gunakan placeholder ($1) untuk mencegah SQL Injection
+	var storedPassword string
+	query := "SELECT password FROM users WHERE username = $1"
+	err := db.QueryRow(query, u.Username).Scan(&storedPassword)
 
 	if err != nil {
+		// Jika username tidak ditemukan
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid credentials"})
+		return
+	}
+
+	// 4. BARU: Bandingkan password inputan dengan hash yang ada di database
+	err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(u.Password))
+	if err != nil {
+		// Jika password salah
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid credentials"})
 		return
@@ -81,11 +100,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db.Exec("INSERT INTO users (username, password) VALUES ('admin', 'password') ON CONFLICT DO NOTHING")
+	// 5. PERBAIKAN: Default admin juga harus di-hash password-nya
+	adminPassword, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+	db.Exec("INSERT INTO users (username, password) VALUES ('admin', $1) ON CONFLICT DO NOTHING", string(adminPassword))
 
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/register", registerHandler)
-	
+
 	log.Println("Auth service running on port 8081")
 	http.ListenAndServe(":8081", nil)
 }

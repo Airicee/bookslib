@@ -1,4 +1,4 @@
-FROM golang:1.25.7-alpine AS base
+FROM golang:1.26-alpine AS base
 WORKDIR /app
 COPY . .
 RUN go mod tidy
